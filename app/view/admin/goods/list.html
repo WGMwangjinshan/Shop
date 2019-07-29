@@ -1,0 +1,39 @@
+<link rel='stylesheet' href="/public/admin/css/base.css">
+<link rel='stylesheet' href="/public/admin/css/bootstrap.min.css">
+<div class="panel panel-default">
+        <div class="panel-heading clear">
+            <span>商品广告列表</span> 
+            <a href="/admin/goods/add" class=" pull-right"> 增加商品广告</a>
+        </div>
+        <div class="panel-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr class="th">
+                        <th>商品名称</th>
+                        <th>商品相册</th>                                      
+                        <th class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%for goods in goodss%}
+                        <tr>
+                            <td>{{goods.goods_name}}</td>  
+                            <td>
+                                {%for gallery in goods.goods_gallery%}
+                                <img src="{{gallery}}" alt="">
+                                {%endfor%}
+                            </td>                                                                
+                            <td class="text-center text">　
+                                <a href="/admin/goods/edit?_id={{goods._id}}">修改</a>
+                                <a href="/admin/goods/delete?_id={{goods._id}}">删除</a>
+
+                            </td>
+                        </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
