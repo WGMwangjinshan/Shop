@@ -1,6 +1,6 @@
 <link rel='stylesheet' href="/public/admin/css/base.css">
 <link rel='stylesheet' href="/public/admin/css/bootstrap.min.css">
- 
+
 <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
@@ -17,6 +17,8 @@
             </thead>
             <tbody>
                 {%for user in users %}
+                
+               
                     <tr>
                         <td>{{user.login_name}}</td>
                         <td>{{user.user_name}}</td>
@@ -36,7 +38,9 @@
                             <a href="/admin/user/delete?_id={{user._id}}">删除</a>
                         </td>
                     </tr> 
+             
                 {%endfor%}      
             </tbody>
         </table>
 </div>
+

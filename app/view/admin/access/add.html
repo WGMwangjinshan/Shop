@@ -26,10 +26,10 @@
                                         <option value="0">顶级模块</option>
                                         {%for module in modules%}
                                         <option value="{{module._id}}">{{module.access_module}}</option> 
-                                        {%endfor%}
+                                        {% endfor %}
                                 </select>
                             </li>
-                            <li>  权限排序: <input type="text" name="data_sort" value="100"/></li>
+                            <li>  权限排序: <input type="text" name="data_sort" value="100"/>1</li>
                             <li>  权限描述:	
                                 <textarea name="access_desc" id="access_desc" cols="60" rows="5"></textarea>
                             </li>

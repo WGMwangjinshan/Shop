@@ -1,5 +1,6 @@
-<link rel='stylesheet' href="/public/admin/css/base.css">
+
 <link rel='stylesheet' href="/public/admin/css/bootstrap.min.css">
+<link rel='stylesheet' href="/public/admin/css/base.css">
 <div class="panel panel-default">
         <div class="panel-heading">
             修改管理员
@@ -9,30 +10,27 @@
                 <form action="/admin/staff/doEdit" method="post">
                     <input type="hidden" name="_csrf" value="{{csrf}}">
                     <input type="hidden" name="_id" value="{{staff._id}}">
-
                     <ul>
-                        <li> 用户账号: <input type="text" name="login_name"  value="{{staff.login_name}}"/></li>
-                        <li> 用户密码: <input type="password" name="login_pwd" /></li>
+                        <li> 用户账号: <input type="text" name="login_name" value="{{staff.login_name}}"/></li>
+                        <li> 用户密码: <input type="text" name="login_pwd" /></li>
                         <li> 用户名称: <input type="text" name="staff_name" value="{{staff.staff_name}}"/></li>
                         <li> 用户编号: <input type="text" name="staff_no" value="{{staff.staff_no}}"/></li>
                         <li> 用户电话: <input type="text" name="staff_phone" value="{{staff.staff_phone}}"/></li>
-                        <li> 用户状态:
-                            {% if staff.staff_status == 1 %}
-                             <input type="radio" name="staff_status" value="1" checked/>正常
-                             <input type="radio" name="staff_status" value="0"/>异常
-                            {% else %}
-                            <input type="radio" name="staff_status" value="1"/>正常
-                            <input type="radio" name="staff_status" value="0" checked/>异常
-                            {%endif%}
-                            </li>                        
+                        {%if staff.staff_status == 1%}
+                        <li> 用户状态: <input type="radio" name="staff_status" value="1" checked/>正常
+                             <input type="radio" name="staff_status" value="0"/>异常</li>
+                        {%else%}
+                        <li> 用户状态: <input type="radio" name="staff_status" value="1"/>正常
+                         <input type="radio" name="staff_status" value="0" checked/>异常</li>
+                        {%endif%}
                         <li> 用户角色:
                             <select name="role_id" id="role_id">
-                                {%for role in roles %}
-                                    {%if staff.role_id.toString() == role._id.toString() %}
-                                    <option value="{{role._id}}" selected >{{role.role_name}}</option>
-                                    {%else%}
-                                    <option value="{{role._id}}">{{role.role_name}}</option>
-                                    {%endif%}
+                                {% for role in roles %}
+                                {% if staff.role_id.toString() == role._id.toString() %}
+                                <option value="{{role._id}}" selected>{{role.role_name}}</option>
+                                {%else%}
+                                <option value="{{role._id}}" >{{role.role_name}}</option>
+                                {%endif%}
                                 {% endfor %}
                             </select>
                         </li>

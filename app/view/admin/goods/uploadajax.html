@@ -1,10 +1,10 @@
 <link rel='stylesheet' href="/public/admin/css/base.css">
 <link rel='stylesheet' href="/public/admin/css/bootstrap.min.css">
-<link rel="stylesheet" href="../../../public/admin/other/webuploader/css/diyUpload.css">
-<link rel="stylesheet" href="../../../public/admin/other/webuploader/css/webuploader.css">
-<script src="../../../public/admin/js/jquery.js"></script>
-<script src="../../../public/admin/other/webuploader/js/diyUpload.js"></script>
-<script src="../../../public/admin/other/webuploader/js/webuploader.html5only.min.js"></script>
+<link rel="stylesheet" href="/public/admin/other/webuploader/css/diyUpload.css">
+<link rel="stylesheet" href="/public/admin/other/webuploader/css/webuploader.css">
+<script src="/public/admin/js/jquery.js"></script>
+<script src="/public/admin/other/webuploader/js/diyUpload.js"></script>
+<script src="/public/admin/other/webuploader/js/webuploader.html5only.min.js"></script>
 
 <div class="panel panel-default">
         <div class="panel-heading">
@@ -15,13 +15,11 @@
                 <div class="photoLib" id="photoLib"></div>
                 <div id="photoList">
                 </div>
-              
             </div>
         </div>
 </div>
 <script>
 $(function(){
-    
         var photoStr = "";
         $("#photoLib").diyUpload({
             url:'/admin/gallery/doUpload?_csrf={{csrf}}',
@@ -35,5 +33,4 @@ $(function(){
             }
         })
     })
-
 </script>

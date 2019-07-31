@@ -1,5 +1,6 @@
-<link href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-<link href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet">
+
+<link rel='stylesheet' href="/public/admin/css/base.css">
+<link rel='stylesheet' href="/public/admin/css/bootstrap.min.css">
 <div class="panel panel-default">              
   <div class="panel-heading">
       增加用户等级
@@ -18,31 +19,22 @@
         </tr>
         </thead>
         <tbody>
-            {% for userrank in userranks %}
+               
+                {%for userrank in userranks%}
                 <tr>
                     <td>
-                        {% if  userrank.data_sort == 1 %}
                         <span class="glyphicon {{userrank.rank_icon}} " style="color:greenyellow"/> 
-                        {%elif userrank.data_sort == 2%}
-                        <span class="glyphicon {{userrank.rank_icon}} " style="color:red"/> 
-                        {%elif userrank.data_sort == 3%}
-                        <span class="glyphicon {{userrank.rank_icon}} " style="color:pink"/> 
-                        {%elif userrank.data_sort == 4%}
-                        <span class="glyphicon {{userrank.rank_icon}} " style="color:black"/> 
-                        {%elif userrank.data_sort == 5%}
-                        <span class="glyphicon {{userrank.rank_icon}} " style="color:blue"/> 
-                         {% endif %}
                     </td>
                     <td>{{userrank.rank_name}}</td>
                     <td>{{userrank.start_score}}</td>
                     <td>{{userrank.end_score}}</td>
-                    <td>{{userrank.discount}}</td>
+                    <td>{{userrank.disconnt}}</td>
                     <td class="text-center text">
                         <a href="/admin/userrank/edit?_id={{userrank._id}}">修改</a>　　
                         <a href="/admin/userrank/delete?_id={{userrank._id}}">删除</a>
                     </td>
                 </tr> 
-                {% endfor %}
+                {%endfor%}
         </tbody>
     </table>
   </div>

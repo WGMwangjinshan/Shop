@@ -1,79 +1,71 @@
-const {Service} = require('egg');
-const svgCaptche = require('svg-captcha');
-const md5 = require('md5')
-const fs = require('fs')
-const path = require('path')
-const awaitWriteStream = require('await-stream-ready').write;
-const sendToWormhole = require('stream-wormhole');
-const dateFormat = require('dateformat')
-var mkdirp = require('mkdirp');
+const { Service } = require("egg");
+const svgCaptcha = require("svg-captcha");
+const md5 = require("md5");
+const fs = require("fs");
+const path = require("path");
+const awaitWriteStream = require("await-stream-ready").write;
+const sendToWormhole = require("stream-wormhole");
+var mkdirp = require("mkdirp");
+var dateFormat = require("dateformat");
+var pump  = require('pump')
+class ToolService extends Service {
+  async captcha(width, height, fontSize) {
+    let w = width ? width : 150;
+    let h = height ? height : 50;
+    let f = fontSize ? fontSize : 50;
+    var captcha = svgCaptcha.create({
+      size: 4,
+      width: w,
+      height: h,
+      fontSize: f
+    });
+    return captcha;
+  }
+  async md5(content) {
+    return md5(content);
+  }
+  async md5Secret(content, secret) {
+    //console.log('content===='+content);
+    //console.log('secret===='+secret);
+    //console.log('md5(content+secret)===='+md5(content+secret));
+    return md5(content + secret);
+  }
+  async randomNumber() {
+    return Math.floor(Math.random() * 9000 + 1000);
+  }
+  // 上传文件 重命名，返回 数据库路径&上传文件路径
+  async filePath(file_name) {
+    let uploadBaseDir = this.app.config.uploadbasedir;
+    let dateDir = dateFormat(new Date(), "yyyymmdd"); //helper转化时间
+    let baseDir = path.join(uploadBaseDir, dateDir); //拼接路径path.join
+    await mkdirp(baseDir);
+    const filename =
+      Date.now() +
+      Math.floor(Math.random() * 9000 + 1000) +
+      path.extname(file_name); //创建上传文件名 统一名称 不能重复,时间戳
+    var targetPath = path.join(baseDir, filename); //app/public/admin/upload/.....文件上传地址
+    var dbPath = targetPath.slice(3).replace(/\\/g, "/"); //处理字符串，形成public路径
+    return { targetPath: targetPath, dbPath: dbPath };
+  }
+  //上传文件
+  async uploadFile(fromStream, targetPath) {
+    //写入流
+    var writestream = fs.createWriteStream(targetPath);
+    // var source = fs.createReadStream('/view/admin/common/aside.html')
+    // console.log(source);
+    
+    // pump(fromStream, writestream, function(err) {
+    //   console.log('pipe finished', err)
+    // })
 
-class ToolService extends Service{
-    async captcha(width,height,fontSize){
-
-        let w = width ?width:100;
-        let h = height? height:35;
-        let f = fontSize ? fontSize:50;
-        var captcha  = svgCaptche.create({
-            size:4,
-            width:w,
-            height:h,
-            fontSize:f
-        })
-        return captcha;
+    try {
+      await awaitWriteStream(fromStream.pipe(writestream));
+    } catch (error) {
+      await sendToWormhole(fromStream);
+      throw error;
+    } finally {
+      await sendToWormhole(fromStream);
     }
-
-    async md5(content){
-        return md5(content+"123")
-    }
-    async md5Secret(content,secret){
-        return md5(content+secret)
-    }
-    async randomNumber()
-    {
-        Math.floor(Math.random()*9000 +1000);
-    }
-
-
-
-
-
-    //上传文件重命名￥￥目标路径￥￥数据库路径
-    async filePath(file_name)
-    {
-        //创建一个文件夹
-     let uploadBaseDir = this.config.uploadbasedir;   
-     let dateDir  = dateFormat(new Date(),'yyyymmdd');  
-     let baseDir = path.join(uploadBaseDir , dateDir);  
-     mkdirp(baseDir);
-     //创建上传文件统一名称  不能重复
-
-     const filename = Date.now() + '' + Math.floor((Math.random() * 9000)+1000) + path.extname(file_name);
-     const targetPath = path.join(baseDir, filename);
-     var dbpath = targetPath.slice(3).replace(/\\/g,'/');
-    return{targetPath:targetPath,dbpath:dbpath}
-    }
-
-
-            //上传文件
-    async upLoadFile(targetPath,fromStream)
-    {
-                const writeStream = fs.createWriteStream(targetPath);
-
-                try 
-                {
-                    await awaitWriteStream(fromStream.pipe(writeStream));         
-                } 
-                catch (error) {
-                    await sendToWormhole(fromStream);  
-                    console.log(error);
-                    throw error;
-                }
-                finally
-                {
-                    await sendToWormhole(fromStream);  
-                }
-    }
-
+  }
 }
 module.exports = ToolService;

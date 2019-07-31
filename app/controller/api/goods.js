@@ -1,20 +1,14 @@
-const { Controller } = require('egg')
+const BaseController = require("../admin/base");
 
-
-
-class GoodsController extends Controller {
-    //显示主页面
-    async goodsList() {
-    
-      let goodsList =[
-
-
-        {
-            name:'apple',
-            price:1
-        }
-      ]
-          this.ctx.body =goodsList;
-    }
+class goodsController extends BaseController {
+  async goodsList() {
+    let goodsList = [
+      { goodsname: "han", price: 19 },
+      { goodsname: "han", price: 19 },
+      { goodsname: "han", price: 19 },
+      { goodsname: "han", price: 19 }
+    ];
+    this.ctx.body = goodsList;
+  }
 }
-module.exports = GoodsController;
+module.exports = goodsController;

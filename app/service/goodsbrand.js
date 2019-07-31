@@ -1,107 +1,147 @@
-const {Service}  =require('egg');
-const fs = require('fs')
+const { Service } = require("egg");
+const fs = require("fs");
+class GoodsBrandService extends Service {
+  async insert(parts) {
+    try {
+      //获取所有字段
+      //不完整的body
+      //单文件上传
+      // var body = fromStream.fields;
+      // var filePath = await this.ctx.service.tool.filePath(fromStream.filename);
+      // //将brand_logo补全
+      // body.brand_logo = filePath.dbPath;
+      // //上传来源流
+      // await this.ctx.service.tool.uploadFile(fromStream, filePath.targetPath);
 
-class GoodsBrandService extends Service{
-    async insert(fromStream)
-    {
-        try {
-        var body = fromStream.fields;
-        var filePath =  await this.ctx.service.tool.filePath(fromStream.filename);
-       body.brand_logo = filePath.dbpath;
-      await this.ctx.service.tool.upLoadFile(filePath.targetPath,fromStream)
-            console.log('baba============='+JSON.stringify(body));
-            var goodsBrandModel = new this.ctx.model.GoodsBrand(body)
-            await goodsBrandModel.save()
-            return{flag:true,msg:'增加商品品牌成功'}
-        } catch (error) {
-            console.log(error); 
-            return{flag:false,msg:'增加商品品牌失败'}
+      //多文件上传
+      var fromStream;
+      var brandLogos = [];
+      // console.log(parts.field);
+
+      while ((fromStream = await parts()) != null) {
+        //console.log(fromStream);
+
+        if (fromStream && fromStream.filename) {
+          //filePath  <=fromStream(fromStream.filename)方法返回
+          var filePath = await this.service.tool.filePath(fromStream.filename); //找到tergetPath目标路径与dbPath相对路径
+          //filePath：{ targetPath: 'app/public/admin/upload/20190726/1564110932558.jpg',   dbPath: '/public/admin/upload/20190726/1564110932558.jpg' }
+          //console.log(fromStream);
+          await this.ctx.service.tool.uploadFile(
+            fromStream,
+            filePath.targetPath
+          ); //上传来源流
+          brandLogos.push(filePath.dbPath); //将相对路径传入整个数组中
+        } else {
+          continue;
         }
-    }
-    async findAll()
-    {
-        try {
-            var brands = await this.ctx.model.GoodsBrand.find({});
-            return{flag:true,data:brands,msg:'获取商品类型成功'}
-        } catch (error) {
-            return{flag:false,msg:'获取商品类型失败，数据异常'}
-            
-        }
-    }
-    async findById(_id)
-    {
-
-     try {
-          var goodsbrands =  await this.ctx.model.GoodsBrand.findById(_id);
-          
-          if(goodsbrands)
-      {
-        console.log('sda'+goodsbrands);
-
-                 return {flag:true,data:goodsbrands,msg:'进入修改商品类型成功'}
       }
-     } catch (error) {
-         console.log('sss'+error);
-         
-         return {flag:false,msg:'进入修改商品类型失败'}
-     }
+      var body = parts.field; //多个文件的数据
+      console.log(body);
 
-     
+      Object.assign(body, { brand_logo: brandLogos }); //将body补全，通过合并对象方法Object.assign将处理好的brandLogos放进body
+      var goodsBrandModel = new this.ctx.model.GoodsBrand(body);
+      await goodsBrandModel.save();
+      return { flag: true, msg: "品牌保存成功" };
+    } catch (error) {
+      return { flag: false, msg: "品牌保存失败" };
     }
-    async update(fromStream){
-        try {
-            var  body = fromStream.fields;
-            var _id = body._id;
-                    if (fromStream.filename)
-                    {
-                    var filePath =  await this.ctx.service.tool.filePath(fromStream.filename);
-                    body.brand_logo = filePath.dbpath
-                    await this.ctx.service.tool.upLoadFile(filePath.targetPath,fromStream)
-                    console.log("jhjhjhjhjhjjhhjjhhjjhjhhjhjhjjhjhh"+filePath.dbpath);
+  }
+  //修改
+  //存在问题
+  
+  async update(parts) {
+    try {
+      var fromStream;
+      var brandLogos = [];
+      while ((fromStream = await parts()) != null) {
+        if (fromStream && fromStream.filename) {
+          console.log("123456");
+          var filePath = await this.service.tool.filePath(fromStream.filename); //找到tergetPath目标路径与dbPath相对路径
+          await this.ctx.service.tool.uploadFile(
+            fromStream,
+            filePath.targetPath
+          ); //上传来源流
+          brandLogos.push(filePath.dbPath);
+          console.log("xxxx" + brandLogos);
+          var body = parts.field;
+          console.log("123" + JSON.stringify(body));
+          var _id = body._id;
+          Object.assign(body, { brand_logo: brandLogos });
+          console.log("456" + JSON.stringify(body));
 
-                    var object = await this.ctx.model.GoodsBrand.findOne({_id:_id},{_id:0,brand_logo:1});
-                    var brand_logo = object.brand_logo;
-                            if (brand_logo) {
-                            var targetPath = "app"+brand_logo
-                            fs.unlinkSync(targetPath)
-                            }
-                    
-                    await this.ctx.model.GoodsBrand.update({_id:_id},body)
-                    return true;
-                    }
-        } catch (error) {
-            console.log(error);
+
+
+          var object = await this.ctx.model.GoodsBrand.findOne(
+            { _id: _id },
+            { _id: 0, brand_logo: 1 }
+          );
+          console.log(object);
+          var brandLogo = object.brand_logo;
+            console.log(brandLogo);
             
-            return false;
+          if (object & object.brand_logo) {
+            brandLogo.forEach(element => {
+              element = "app" + element;
+              console.log(brandLogo);
+              fs.unlinkSync(element);
+            });
+          }
+        } else {
+          continue;
         }
-            
-       
+      }
+      await this.ctx.model.GoodsBrand.update({ _id: _id }, body);
+      return { flag: true, msg: "修改商品品牌成功" };
+    } catch (error) {
+      return { flag: false, msg: "修改商品品牌失败" };
     }
-
-     async deleteById(_id)
-       {
-        
-
-        try {
-
-            var object = await this.ctx.model.GoodsBrand.findOne({_id:_id},{_id:0,brand_logo:1})
-            var brand_logo = object.brand_logo;
-            var targetPath = 'app'+brand_logo
-
-            fs.unlinkSync(targetPath)
-
-             await this.ctx.model.GoodsBrand.deleteOne({_id:_id});
-             
-         
-                    return true
-         
-        } catch (error) {
-            console.log(error);
-            
-            return false
-        }
-
-        
-       }
+  }
+  //查找全部品牌
+  async findAll() {
+    try {
+      var goodsBrands = await this.ctx.model.GoodsBrand.find();
+      return { flag: true, data: goodsBrands, msg: "查询品牌成功" };
+    } catch (error) {
+      return { flag: false, msg: "数据异常，查询商品失败" };
+    }
+  }
+  //findById查找
+  async findById(_id) {
+    try {
+      var goodsBrandFindById = await this.ctx.model.GoodsBrand.findById({
+        _id: _id
+      });
+      return {
+        flag: true,
+        data: goodsBrandFindById,
+        msg: "通过商品ID查询品牌成功"
+      };
+    } catch (error) {
+      return { flag: false, msg: "通过商品ID查询品牌失败" };
+    }
+  }
+  //删除文件
+  async delete(_id) {
+    try {
+      var object = await this.ctx.model.GoodsBrand.findOne(
+        { _id: _id },
+        { _id: 0, brand_logo: 1 }
+      );
+      if (object & object.brand_logo) {
+        var brandLogo = object.brand_logo;
+        brandLogo.forEach(element => {
+          element = "app" + element;
+          console.log(brandLogo);
+          fs.unlinkSync(element);
+        });
+      }
+      //单文件上传
+      //var tergetPath = "app" + brandLogo;
+      await this.ctx.model.GoodsBrand.deleteOne({ _id: _id });
+      return { flag: true, msg: "删除属性成功" };
+    } catch (error) {
+      return { flag: false, msg: "数据异常删除商品属性规格失败" };
+    }
+  }
 }
 module.exports = GoodsBrandService;

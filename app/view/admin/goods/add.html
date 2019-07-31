@@ -20,11 +20,11 @@
 <div class="panel panel-default">
     <div class="panel-heading clear">
         <span>增加商品</span>
-        <a href="admin/goods" class=" pull-right">保存提交</a>
+        <button id="goods_button" class="pull-right">保存提交</button>
     </div>
     <div class="panel-body">
         <div class="table-responsive input-form">
-            <form action="" method="post" enctype="multipart/form-data">
+            <form id="goodsForm" action="/admin/goods/doAdd?_csrf={{csrf}}" method="post" enctype="multipart/form-data">
                 <div>
                     <!-- Nav tabs -->
                     <ul class="nav nav-tabs" role="tablist">
@@ -63,12 +63,9 @@
                                     </select>
                                 </li>
                                 <li> <span>商品图片:</span> <input type="file" name="goods_img" /></li>
-                                <li> <span>商品描述: </span><input type="text" name="goods_desc" /></li>
                                 <li> <span>商品简介:</span> <input type="text" name="goods_brief" /></li>
-                                <!-- <li> <span>商品版本: </span><input type="text" name="cate_keys" /></li> -->
                                 <li> <span>市场价格: </span><input type="text" name="price_market" /></li>
                                 <li> <span>销售价格: </span><input type="text" name="price_selling" /></li>
-                                <!-- <li> <span>商品原价: </span><input type="text" name="cate_keys" /></li> -->
                                 <li> <span>促销价格: </span><input type="text" name="price_promote" /></li>
                                 <li> <span>库存数量: </span><input type="text" name="stock_number" /></li>
                                 <li> <span>预售数量: </span><input type="text" name="stock_warn" /></li>
@@ -91,21 +88,13 @@
                             </ul>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="desc">
-                            <textarea id="content" cols="80" rows="60"></textarea>
+                            <textarea id="content" name="goods_desc" cols="80" rows="60"></textarea>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="other">
                             <ul>
                                 <li> <span>商品单位: </span><input type="text" name="goods_unit" class="input" /></li>
                                 <li> <span>商品重量:</span> <input type="text" name="goods_weight" class="input" /></li>
                                 <li> <span>商品关键词: </span><input type="text" name="goods_keys" class="input" /></li>
-                                <li> <span>商品颜色:</span> <input type="text" name="attr_colors" class="input"
-                                        placeholder="注：颜色：Sting‘，’分隔" /><span>注：颜色：Sting‘，’分隔</span></li>
-                                <li> <span>商品尺寸:</span> <input type="text" name="attr_sizes" class="input"
-                                        placeholder="注：尺寸值：Sting‘，’分隔" /><span>注：尺寸值：Sting‘，’分隔</span></li>
-                                <li> <span>商品版本:</span> <input type="text" name="attr_versions" class="input"
-                                        placeholder="注：版本值：Sting‘，’分隔" /><span>注：版本值：Sting‘，’分隔</span></li>
-                                <li> <span>其他属性:</span> <input type="text" name="attr_others" class="input"
-                                        placeholder="注：标题：属性值，属性值：“|”符号隔开" /><span>注：标题：属性值，属性值：“|”符号隔开</span></li>
                                 <li> <span>关联商品:</span> <input type="text" name="relate_goods" class="input"
                                         placeholder="注：【Objectid逗号隔开】" /><span>注：【Objectid逗号隔开】</span></li>
                                 <li> <span>关联礼物:</span> <input type="text" name="relate_gifts" class="input"
@@ -138,7 +127,6 @@
                                 </li>
                             </ul>
                             <ul class="from_input" id="type_attr">
-
                             </ul>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="gallery">
@@ -177,27 +165,26 @@
             });
         });
     })
+
     //商品相册多文件上传
     $(function () {
         var photoStr = "";
         $("#photoLib").diyUpload({
-            url: '/admin/gallery/doUpload?_csrf={{csrf}}',
-            success: function (response) {
-                photoStr = '<input type="hidden" name="goods_image_list[]" value=' + response.link + ' />';
-                
-                $("photoList").append(photoStr);
+            url: '/admin/goods/doUpload?_csrf={{csrf}}',
+            success: function (response) {                                        //返回数组（‘/public..../a.jpg）
+                photoStr = '<input type="hidden" name="relate_gallerys" value=' + response.link + ' />';
+                //放入photoList列表
+                $("#photoList").append(photoStr);
             },
             error: function (err) {
                 console.log(err)
             }
         })
     })
-
     $(function () {
         //商品类型 关联
         $('#type_id').change(function () {
             var type_id = $(this).val();
-
             if (type_id == 0) {
                 $('#type_attr').hide();
                 return;
@@ -206,18 +193,17 @@
                 var data = '';
                 $.get('/admin/goods/getTypeAttrs?type_id=' + type_id, function (response) {
                     // json解析问题
-
                     data = response.data;
                     var str = "";
                     for (var i = 0; i < data.length; i++) {
                         if (data[i].attr_type == 1) {//1:唯一属性2:单选3:复选
                             str += '<li><span>' + data[i].attr_name + ': </span><input type="hidden" name="attr_id_list" value="' + data[i]._id + '" />  <input type="text" name="attr_value_list" /></li>'
-                        } else if (data[i].attr_type == 2) {
-                            for (var j = 0; i < data[i].attr_value.length; j++) {
-                                str += '<li><span>' + data[i].attr_name + ': </span><input type="hidden" name="attr_id_list" value="' + data[i]._id + '"/> <select> <option value="' + data[i]._id + '">"'
-                            }
+                        } else {
+                            str += '<li><span>' + data[i].attr_name + ': </span><input type="hidden" name="attr_id_list" value="' + data[i]._id + '" />'
+                            str += '<textarea name="attr_value_list"  rows="5" cols="30">';
 
-
+                            str += '</textarea> ';
+                            str += '</li>';
                         }
                     }
                     $('#type_attr').html(str);
@@ -225,5 +211,9 @@
             }
         })
     })
-
+    $(function () {
+        $('#goods_button').on('click', function () {
+            $('#goodsForm').submit();
+        })
+    })
 </script>

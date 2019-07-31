@@ -1,93 +1,88 @@
-const {Service}  =require('egg');
-const fs = require('fs')
-
-class Goodservice extends Service{
-    async upload(parts)
-    {
-        try {
-            var links = [];
-            var fromStream ;
-            while((fromStream =await parts())!=null)
-            {
-       if (fromStream.filename) {
-        var filePath =  await this.ctx.service.tool.filePath(fromStream.filename);
-        var targetPath = filePath.targetPath;
-        var dbpath = filePath.dbpath;
-        await this.ctx.service.tool.upLoadFile(targetPath,fromStream)
-        links.push(dbpath)
-                    
-                }
-                else{
-                    continue;
-                }
-            }
-            console.log(links);
-            return{flag:true,data:links,msg:'商品相册添加成功'}
-        } catch (error) {
-            console.log(error); 
-            return{flag:false,data:links,msg:'商品相册添加成功'}
+const { Service } = require("egg");
+const fs = require("fs");
+class GoodsService extends Service {
+  async upload(parts) {
+    try {
+      var fromStream;
+      var links = [];
+      while ((fromStream = await parts()) != null) {
+        if (fromStream.filename) {
+          var filePath = await this.service.tool.filePath(fromStream.filename); //找到tergetPath目标路径与dbPath相对路径
+          //filePath：{ targetPath: 'app/public/admin/upload/20190726/1564110932558.jpg',   dbPath: '/public/admin/upload/20190726/1564110932558.jpg' }
+          await this.ctx.service.tool.uploadFile(
+            fromStream,
+            filePath.targetPath
+          ); //上传来源流
+          links.push(filePath.dbPath);
+        } else {
+          continue;
         }
-    }
-    async findAll()
-    {
-        try {
-            var goods = await this.ctx.model.Goods.find({});
-            return{flag:true,data:goods,msg:'获取商品类型成功'}
-        } catch (error) {
-            return{flag:false,msg:'获取商品类型失败，数据异常'}
-            
-        }
-    }
-    async findById(_id)
-    {
-
-     try {
-          var goodsbrands =  await this.ctx.model.GoodsBrand.findById(_id);
-          if(goodsbrands)
-      {
-                 return {flag:true,data:goodsbrands,msg:'进入修改商品类型成功'}
       }
-     } catch (error) {
-         return {flag:false,msg:'进入修改商品类型失败'}
-     }
-
-     
+      return { flag: true, data: links, msg: "商品保存成功" };
+    } catch (error) {
+      return { flag: false, msg: "商品保存失败" };
     }
-    async update(_id,goodstype){
+  }
+  async insert(fromStream) {
+    try {
+      var body = fromStream.fields;
 
-        try {
-            await this.ctx.model.GoodsType.updateOne({_id:_id},goodstype);
-            return true;
-        } catch (error) {
-            return false;
-        }
-            
-       }
 
-     async deleteById(_id)
-       {
-        
+      //字符串处理
+      body.relate_goods = body.relate_goods.trim().split(',')
+      body.relate_gifts = body.relate_gifts.trim().split(',')
+      body.relate_parts = body.relate_parts.trim().split(',')
+      body.relate_articles = body.relate_articles.trim().split(',')
 
-        try {
 
-            var object = await this.ctx.model.GoodsBrand.findOne({_id:_id},{_id:0,brand_logo:1})
-            var brand_logo = object.brand_logo;
-            var targetPath = 'app'+brand_logo
-
-            fs.unlinkSync(targetPath)
-
-             await this.ctx.model.GoodsBrand.deleteOne({_id:_id});
-             
-         
-                    return true
-         
-        } catch (error) {
-            console.log(error);
-            
-            return false
-        }
-
-        
-       }
+      if (fromStream && fromStream.filename) {
+        var filePath = await this.service.tool.filePath(fromStream.filename); //找到tergetPath目标路径与dbPath相对路径
+        var dbPath = filePath.dbPath;
+        var targetPath = filePath.targetPath;
+        body.goods_img = dbPath;
+        await this.ctx.service.tool.uploadFile(fromStream, targetPath); //上传来源流
+      }
+      var goodsModel = new this.ctx.model.Goods(body);
+      var result = await goodsModel.save();
+      console.log(JSON.stringify('xxxxxx'+result));
+      //处理商品属性值
+      var goods_id = result._id
+      var attr_values  = body.attr_value_list
+      var attrNewValues = []
+      attr_values.forEach(element => {
+          element = element.trim().split('\r\n')
+          attrNewValues.push(element)
+      });
+      var attrArray = body.attr_id_list
+      for (let i = 0; i < attrArray.length; i++) {
+        //拆分字段
+        var attr_id = attrArray[i];
+        var attr_value = attrNewValues[i]
+        var typeAttr =await this.ctx.model.GoodsTypeAttr.findById(attr_id)
+        var attr_name =typeAttr.attr_name
+        var type_id = typeAttr.type_id
+        var attr_group = typeAttr.attr_group
+        var attr_type = typeAttr.attr_type
+        //拼接存储
+        var goodsAttrModel = new this.ctx.model.GoodsAttr({
+          goods_id:goods_id,
+          type_id:type_id,
+          attr_id:attr_id,
+          attr_name:attr_name,
+          attr_value:attr_value,
+          attr_group:attr_group,
+          attr_type:attr_type,
+        })
+        await goodsAttrModel.save()
+      }
+      //数据库存储完毕后才能取出id
+      return { flag: true, msg: "商品保存成功" };
+    } catch (error) {
+      console.log(error);
+      
+      return { flag: false, msg: "商品保存失败" };
+    }
+  }
 }
-module.exports = Goodservice;
+
+module.exports = GoodsService;

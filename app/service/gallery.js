@@ -1,107 +1,35 @@
-const {Service}  =require('egg');
-const fs = require('fs')
-
-class GoodsBrandService extends Service{
-    async insert(fromStream)
-    {
-        try {
-        var body = fromStream.fields;
-        var filePath =  await this.ctx.service.tool.filePath(fromStream.filename);
-       body.brand_logo = filePath.dbpath;
-      await this.ctx.service.tool.upLoadFile(filePath.targetPath,fromStream)
-            console.log('baba============='+JSON.stringify(body));
-            var goodsBrandModel = new this.ctx.model.GoodsBrand(body)
-            await goodsBrandModel.save()
-            return{flag:true,msg:'增加商品品牌成功'}
-        } catch (error) {
-            console.log(error); 
-            return{flag:false,msg:'增加商品品牌失败'}
+const { Service } = require("egg");
+const fs = require("fs");
+class GalleryService extends Service {
+  async upload(parts) {
+    try {
+      var fromStream;
+      var gallerys = [];
+      while ((fromStream = await parts()) != null) {
+        if (fromStream.filename) {
+          var filePath = await this.service.tool.filePath(fromStream.filename); //找到tergetPath目标路径与dbPath相对路径
+          //filePath：{ targetPath: 'app/public/admin/upload/20190726/1564110932558.jpg',   dbPath: '/public/admin/upload/20190726/1564110932558.jpg' }
+          await this.ctx.service.tool.uploadFile(
+            fromStream,
+            filePath.targetPath
+          ); //上传来源流
+          gallerys.push(filePath.dbPath);
+        } else {
+          continue;
         }
-    }
-    async findAll()
-    {
-        try {
-            var brands = await this.ctx.model.GoodsBrand.find({});
-            return{flag:true,data:brands,msg:'获取商品类型成功'}
-        } catch (error) {
-            return{flag:false,msg:'获取商品类型失败，数据异常'}
-            
-        }
-    }
-    async findById(_id)
-    {
-
-     try {
-          var goodsbrands =  await this.ctx.model.GoodsBrand.findById(_id);
-          
-          if(goodsbrands)
-      {
-        console.log('sda'+goodsbrands);
-
-                 return {flag:true,data:goodsbrands,msg:'进入修改商品类型成功'}
       }
-     } catch (error) {
-         console.log('sss'+error);
-         
-         return {flag:false,msg:'进入修改商品类型失败'}
-     }
+      //console.log(gallerys);
+      //var body = parts.field;
+      // body.goods_gallery = gallerys;
+      //Object.assign(body, { goods_gallery: gallerys });
+      // var goodsModel = new this.ctx.model.Goods(body);
+      // await goodsModel.save();
 
-     
+      return { flag: true, data:gallerys,msg: "商品保存成功" };
+    } catch (error) {
+      return { flag: false, msg: "商品保存失败" };
     }
-    async update(fromStream){
-        try {
-            var  body = fromStream.fields;
-            var _id = body._id;
-                    if (fromStream.filename)
-                    {
-                    var filePath =  await this.ctx.service.tool.filePath(fromStream.filename);
-                    body.brand_logo = filePath.dbpath
-                    await this.ctx.service.tool.upLoadFile(filePath.targetPath,fromStream)
-                    console.log("jhjhjhjhjhjjhhjjhhjjhjhhjhjhjjhjhh"+filePath.dbpath);
-
-                    var object = await this.ctx.model.GoodsBrand.findOne({_id:_id},{_id:0,brand_logo:1});
-                    var brand_logo = object.brand_logo;
-                            if (brand_logo) {
-                            var targetPath = "app"+brand_logo
-                            fs.unlinkSync(targetPath)
-                            }
-                    
-                    await this.ctx.model.GoodsBrand.update({_id:_id},body)
-                    return true;
-                    }
-        } catch (error) {
-            console.log(error);
-            
-            return false;
-        }
-            
-       
-    }
-
-     async deleteById(_id)
-       {
-        
-
-        try {
-
-            var object = await this.ctx.model.GoodsBrand.findOne({_id:_id},{_id:0,brand_logo:1})
-            var brand_logo = object.brand_logo;
-            var targetPath = 'app'+brand_logo
-
-            fs.unlinkSync(targetPath)
-
-             await this.ctx.model.GoodsBrand.deleteOne({_id:_id});
-             
-         
-                    return true
-         
-        } catch (error) {
-            console.log(error);
-            
-            return false
-        }
-
-        
-       }
+  }
 }
-module.exports = GoodsBrandService;
+
+module.exports = GalleryService;
