@@ -21,7 +21,7 @@
                     </li>{%for logo in brands.brand_logo %}
                     <li> <span>品牌LOGO:</span> <input type="file" name="brand_logo" />
                     </li>
-                    <li> <img src="{{logo}}" width="200"></li>{%endfor%}
+                    <li> <img src="{{helper.url200(logo)}}" width="200"></li>{%endfor%}
                     <li>
                             
                         <br />

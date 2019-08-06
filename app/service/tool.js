@@ -7,7 +7,8 @@ const awaitWriteStream = require("await-stream-ready").write;
 const sendToWormhole = require("stream-wormhole");
 var mkdirp = require("mkdirp");
 var dateFormat = require("dateformat");
-var pump  = require('pump')
+var pump = require("pump");
+var Jimp = require("jimp");
 class ToolService extends Service {
   async captcha(width, height, fontSize) {
     let w = width ? width : 150;
@@ -53,7 +54,7 @@ class ToolService extends Service {
     var writestream = fs.createWriteStream(targetPath);
     // var source = fs.createReadStream('/view/admin/common/aside.html')
     // console.log(source);
-    
+
     // pump(fromStream, writestream, function(err) {
     //   console.log('pipe finished', err)
     // })
@@ -66,6 +67,20 @@ class ToolService extends Service {
     } finally {
       await sendToWormhole(fromStream);
     }
+  }
+  //压缩文件
+  async jimp(targetPath) {
+    Jimp.read(targetPath)
+      .then(lenna => {
+        return lenna
+          .resize(200, 200)
+          .quality(60)
+          .greyscale()
+          .write(targetPath + "_200x200" + path.extname(targetPath));
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }
 }
 module.exports = ToolService;

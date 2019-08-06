@@ -23,7 +23,7 @@
                     {%for brand in brands%}
                     <tr>
                         <td>{{brand.brand_name}}</td>
-                        <td>{%for logo in brand.brand_logo %}<img class="pic" src="{{logo}}" alt=""
+                        <td>{%for logo in brand.brand_logo %}<img class="pic" src="{{helper.url200(logo)}}" alt=""
                                 width="30">{%endfor%}</td>
                         <!-- <td>{{brand.brand_logo}}</td>   -->
                         <td>{{brand.brand_url}}</td>

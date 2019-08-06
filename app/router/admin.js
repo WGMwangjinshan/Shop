@@ -106,6 +106,10 @@ module.exports = app => {
   router.get("/admin/goods/add",controller.admin.goods.add)
   router.post("/admin/goods/doAdd", controller.admin.goods.doAdd);
   router.get("/admin/goods/getTypeAttrs",controller.admin.goods.change)
+
+  router.get("/admin/goods/edit",controller.admin.goods.edit)
+  router.post("/admin/goods/doEdit", controller.admin.goods.doEdit);
+  router.get("/admin/goods/deleteImg",controller.admin.goods.deleteImg)
  
   
 

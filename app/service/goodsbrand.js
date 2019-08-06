@@ -1,5 +1,6 @@
 const { Service } = require("egg");
 const fs = require("fs");
+const path = require("path");
 class GoodsBrandService extends Service {
   async insert(parts) {
     try {
@@ -16,11 +17,7 @@ class GoodsBrandService extends Service {
       //多文件上传
       var fromStream;
       var brandLogos = [];
-      // console.log(parts.field);
-
       while ((fromStream = await parts()) != null) {
-        //console.log(fromStream);
-
         if (fromStream && fromStream.filename) {
           //filePath  <=fromStream(fromStream.filename)方法返回
           var filePath = await this.service.tool.filePath(fromStream.filename); //找到tergetPath目标路径与dbPath相对路径
@@ -30,14 +27,14 @@ class GoodsBrandService extends Service {
             fromStream,
             filePath.targetPath
           ); //上传来源流
-          brandLogos.push(filePath.dbPath); //将相对路径传入整个数组中
+          brandLogos.push(filePath.dbPath); //将相对路径传入整个数组中/
+          //图片压缩
+          await this.ctx.service.tool.jimp(filePath.targetPath);
         } else {
           continue;
         }
       }
       var body = parts.field; //多个文件的数据
-      console.log(body);
-
       Object.assign(body, { brand_logo: brandLogos }); //将body补全，通过合并对象方法Object.assign将处理好的brandLogos放进body
       var goodsBrandModel = new this.ctx.model.GoodsBrand(body);
       await goodsBrandModel.save();
@@ -48,42 +45,40 @@ class GoodsBrandService extends Service {
   }
   //修改
   //存在问题
-  
+
   async update(parts) {
     try {
       var fromStream;
       var brandLogos = [];
       while ((fromStream = await parts()) != null) {
-        if (fromStream && fromStream.filename) {
-          console.log("123456");
+        if (fromStream && fromStream.filename) { 
           var filePath = await this.service.tool.filePath(fromStream.filename); //找到tergetPath目标路径与dbPath相对路径
           await this.ctx.service.tool.uploadFile(
             fromStream,
             filePath.targetPath
           ); //上传来源流
           brandLogos.push(filePath.dbPath);
-          console.log("xxxx" + brandLogos);
+          await this.ctx.service.tool.jimp(filePath.targetPath);
           var body = parts.field;
-          console.log("123" + JSON.stringify(body));
+
           var _id = body._id;
           Object.assign(body, { brand_logo: brandLogos });
-          console.log("456" + JSON.stringify(body));
-
-
 
           var object = await this.ctx.model.GoodsBrand.findOne(
             { _id: _id },
             { _id: 0, brand_logo: 1 }
           );
-          console.log(object);
           var brandLogo = object.brand_logo;
-            console.log(brandLogo);
-            
-          if (object & object.brand_logo) {
+          if (brandLogo) {
             brandLogo.forEach(element => {
-              element = "app" + element;
-              console.log(brandLogo);
-              fs.unlinkSync(element);
+              var path1 = "app" + element;
+              var path2 = this.ctx.helper.url200(path1);
+              if (fs.existsSync(path1)) {
+                fs.unlinkSync(path1);
+              }
+              if (fs.existsSync(path2)) {
+                fs.unlinkSync(path2);
+              }
             });
           }
         } else {
@@ -127,12 +122,19 @@ class GoodsBrandService extends Service {
         { _id: _id },
         { _id: 0, brand_logo: 1 }
       );
-      if (object & object.brand_logo) {
-        var brandLogo = object.brand_logo;
+      //console.log(object);
+      var brandLogo = object.brand_logo;
+      //console.log(brandLogo);
+
+      if (brandLogo) {
         brandLogo.forEach(element => {
-          element = "app" + element;
-          console.log(brandLogo);
-          fs.unlinkSync(element);
+          var path1 = "app" + element;
+          var path2 = this.ctx.helper.url200(path1);
+          console.log(path2);
+          fs.unlinkSync(path2);
+          fs.unlinkSync(path1);
+
+          //fs.unlinkSync(path2);
         });
       }
       //单文件上传

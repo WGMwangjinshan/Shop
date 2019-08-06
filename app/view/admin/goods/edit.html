@@ -19,12 +19,14 @@
 
 <div class="panel panel-default">
     <div class="panel-heading clear">
-        <span>增加商品</span>
-        <button id="goods_button" class="pull-right">保存提交</button>
+        <span>修改商品</span>
+        <button id="goods_button" class="pull-right">更新</button>
     </div>
     <div class="panel-body">
         <div class="table-responsive input-form">
-            <form id="goodsForm" action="/admin/goods/doAdd?_csrf={{csrf}}" method="post" enctype="multipart/form-data">
+            <form id="goodsForm" action="/admin/goods/doEdit?_csrf={{csrf}}" method="post" enctype="multipart/form-data">
+               <input type="hidden" name="lastPage" value="{{lastPage}}">
+               <input type="hidden" name="_id" value="{{goods._id}}">
                 <div>
                     <!-- Nav tabs -->
                     <ul class="nav nav-tabs" role="tablist">
@@ -43,14 +45,14 @@
                     <div class="tab-content">
                         <div role="tabpanel" class="tab-pane active" id="base">
                             <ul>
-                                <li> <span>商品标题:</span> <input type="text" name="goods_title" /></li>
-                                <li> <span>商品编号:</span> <input type="text" name="goods_sn" /></li>
+                                <li> <span>商品标题:</span> <input type="text" name="goods_title" value="{{goods.goods_title}}"/></li>
+                                <li> <span>商品编号:</span> <input type="text" name="goods_sn" value="{{goods.goods_sn}}"/></li>
                                 <li> <span>所属分类:</span>
                                     <select name="category_id" id="category_id">
                                         {%for cate in cates%}
-                                        <option value={{cate._id}}>{{cate.cate_name}}</option>
+                                        <option value={{cate._id}} {%if goods.category_id.toString == cate._id.toString()%} selected {%endif%}>{{cate.cate_name}}</option>
                                         {%for subCategory in cate.subCategorys%}
-                                        <option value="{{subCategory._id}}">{{subCategory.cate_name}}</option>
+                                        <option value="{{subCategory._id}}" {%if goods.category_id.toString == subCategory._id.toString()%} selected {%endif%}>{{subCategory.cate_name}}</option>
                                         {%endfor%}
                                         {%endfor%}
                                     </select>
@@ -58,60 +60,70 @@
                                 <li> <span>商品品牌:</span>
                                     <select name="brand_id" id="brand_id">
                                         {%for brand in brands%}
-                                        <option value="{{brand._id}}">{{brand.brand_name}}</option>
+                                        <option value="{{brand._id}}" {%if goods.brand_id.toString() == brand._id.toString()%} selected {%endif%}>{{brand.brand_name}}</option>
                                         {%endfor%}
                                     </select>
                                 </li>
-                                <li> <span>商品图片:</span> <input type="file" name="goods_img" /></li>
-                                <li> <span>商品简介:</span> <input type="text" name="goods_brief" /></li>
-                                <li> <span>市场价格: </span><input type="text" name="price_market" /></li>
-                                <li> <span>销售价格: </span><input type="text" name="price_selling" /></li>
-                                <li> <span>促销价格: </span><input type="text" name="price_promote" /></li>
-                                <li> <span>库存数量: </span><input type="text" name="stock_number" /></li>
-                                <li> <span>预售数量: </span><input type="text" name="stock_warn" /></li>
+                                <li> <span>商品图片:</span> 
+                                    <input type="file" name="goods_img" />
+                                    <input type="hidden" name="history_img" value="goods.goods_img" />
+                                <img src="{{helper.url200(goods.goods_img)}}" width="200">
+                                </li>
+                                <li> <span>商品简介:</span> <input type="text" name="goods_brief" value="{{goods.goods_brief}}"/></li>
+                                <li> <span>市场价格: </span><input type="text" name="price_market" value="{{goods.price_market}}"/></li>
+                                <li> <span>销售价格: </span><input type="text" name="price_selling" value="{{goods.price_selling}}"/></li>
+                                <li> <span>促销价格: </span><input type="text" name="price_promote" value="{{goods.price_promote}}"/></li>
+                                <li> <span>库存数量: </span><input type="text" name="stock_number" value="{{goods.stock_number}}"/></li>
+                                <li> <span>预售数量: </span><input type="text" name="stock_warn" value="{{goods.stock_warn}}"/></li>
                                 <li> <span>是否促销:</span>
-                                    <input type="radio" name="is_pomote" value="1" id="a" checked /> <label
-                                        for="a">开启</label>
-                                    <input type="radio" name="is_pomote" value="0" id="b" /><label for="b">关闭</label>
+                                   
+                                        <input type="radio" name="is_pomote" value="1" id="a" {%if goods.is_pomote == 1 %} checked {%endif%} /> <label
+                                            for="a">开启</label>
+                                        <input type="radio" name="is_pomote" value="0" id="b" {%if goods.is_pomote == 0 %} checked {%endif%}/><label for="b">关闭</label>
+                                   
                                 </li>
                                 <li> <span>加入推荐:</span>
-                                    <input type="radio" name="is_best" value="1" id="a" /> <label
+                                    <input type="radio" name="is_best" value="1" id="a" {%if goods.is_best == 1 %} checked {%endif%} /> <label
                                         for="a">精品</label>
-                                    <input type="radio" name="is_hot" value="1" id="b" /><label for="b">热销</label>
-                                    <input type="radio" name="is_new" value="1" id="c" /><label for="c">新品</label>
+                                    <input type="radio" name="is_hot" value="1" id="b" {%if goods.is_hot == 1 %} checked {%endif%} /><label for="b">热销</label>
+                                    <input type="radio" name="is_new" value="1" id="c" {%if goods.is_new == 1 %} checked {%endif%}/><label for="c">新品</label>
                                 </li>
                                 <li> <span>虚拟商品:</span>
-                                    <input type="radio" name="is_real" value="1" id="a" checked /> <label
+                                    <input type="radio" name="is_real" value="1" id="a" {%if goods.is_real == 1 %} checked {%endif%} /> <label
                                         for="a">实物</label>
-                                    <input type="radio" name="is_real" value="0" id="b" /><label for="b">虚拟</label>
+                                    <input type="radio" name="is_real" value="0" id="b" {%if goods.is_real == 0 %} checked {%endif%}/><label for="b">虚拟</label>
                                 </li>
                             </ul>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="desc">
-                            <textarea id="content" name="goods_desc" cols="80" rows="60"></textarea>
+                            <textarea id="content" name="goods_desc" cols="80" rows="60" >{{goods.goods_desc}}</textarea>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="other">
                             <ul>
-                                <li> <span>商品单位: </span><input type="text" name="goods_unit" class="input" /></li>
-                                <li> <span>商品重量:</span> <input type="text" name="goods_weight" class="input" /></li>
-                                <li> <span>商品关键词: </span><input type="text" name="goods_keys" class="input" /></li>
+                                <li> <span>商品单位: </span><input type="text" name="goods_unit" class="input"  value="{{goods.goods_unit}}"/></li>
+                                <li> <span>商品重量:</span> <input type="text" name="goods_weight" class="input" value="{{goods.goods_weight}}"/></li>
+                                <li> <span>商品关键词: </span><input type="text" name="goods_keys" class="input" value="{{goods.goods_keys}}"/></li>
                                 <li> <span>关联商品:</span> <input type="text" name="relate_goods" class="input"
-                                        placeholder="注：【Objectid逗号隔开】" /><span>注：【Objectid逗号隔开】</span></li>
+                                        placeholder="注：【Objectid逗号隔开】" 
+                                        value="{{goods.relate_goods}}"/><span>注：【Objectid逗号隔开】</span></li>
                                 <li> <span>关联礼物:</span> <input type="text" name="relate_gifts" class="input"
-                                        placeholder="注:【Objectid逗号隔开】" /><span>注：【Objectid ","逗号隔开】</span></li>
+                                        placeholder="注:【Objectid逗号隔开】" 
+                                        value="{{goods.relate_gifts}}"/><span>注：【Objectid ","逗号隔开】</span></li>
                                 <li> <span>关联配件:</span> <input type="text" name="relate_parts" class="input"
-                                        placeholder="【Objectid ','逗号隔开】】" /><span>注：【Objectid ","逗号隔开】】</span></li>
+                                        placeholder="【Objectid ','逗号隔开】】" 
+                                        value="{{goods.relate_parts}}"/><span>注：【Objectid ","逗号隔开】】</span></li>
                                 <li> <span>关联文章:</span> <input type="text" name="relate_articles" class="input"
-                                        placeholder="注：【Objectid ','逗号隔开】" /><span>注：【Objectid ","逗号隔开】</span></li>
+                                        placeholder="注：【Objectid ','逗号隔开】" 
+                                        value="{{goods.relate_articles}}"/><span>注：【Objectid ","逗号隔开】</span></li>
                                 <li> <span>商品状态:</span>
                                     <input type="radio" name="is_sale" value="1" id="a" checked /> <label
-                                        for="a">上架</label>
-                                    <input type="radio" name="is_sale" value="0" id="b" /><label for="b">下架</label>
+                                        for="a" {%if goods.is_sale == 1 %} checked {%endif%}>上架</label>
+                                    <input type="radio" name="is_sale" value="0" id="b" /><label for="b" {%if goods.is_sale == 0 %} checked {%endif%}>下架</label>
                                 </li>
                                 <li> <span>商品状态:</span>
-                                    <input type="radio" name="data_status" value="1" id="a" checked /> <label
+                                    <input type="radio" name="data_status" value="1" id="a" {%if goods.data_status == 1 %} checked {%endif%} /> <label
                                         for="a">显示</label>
-                                    <input type="radio" name="data_status" value="0" id="b" /><label for="b">隐藏</label>
+                                    <input type="radio" name="data_status" value="0" id="b" {%if goods.data_status == 0 %} checked {% endif %}/><label for="b">隐藏</label>
                                 </li>
                             </ul>
                         </div>
@@ -121,12 +133,15 @@
                                     <select name="type_id" id="type_id">
                                         <option value="0">请选择商品类型</option>
                                         {%for type in types%}
-                                        <option value="{{type._id}}">{{type.type_name}}</option>
+                                        <option value="{{type._id}}"
+                                        {%if goods.type_id.toString() == type._id.toString()%} selected {%endif%}
+                                        >{{type.type_name}}</option>
                                         {%endfor%}
                                     </select>
                                 </li>
                             </ul>
                             <ul class="from_input" id="type_attr">
+                                {{goodsattr | safe}}
                             </ul>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="gallery">
@@ -138,6 +153,16 @@
                                     <div class="table-responsive input-form">
                                         <div class="photoLib" id="photoLib"></div>
                                         <div id="photoList">
+                                            <ul>
+                                                {%for item in goods.relate_gallerys%}
+                                                    <div>
+                                                        <input type="hidden" name="relate_gallerys" value="{{item}}">
+                                                         <img src="{{item}}" width="150" class="goods_image_delete" img_url="{{item}}">
+                                               
+                                                    </div>
+                                                   
+                                                {%endfor%}
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
@@ -216,4 +241,26 @@
             $('#goodsForm').submit();
         })
     })
+  
+        $('.goods_image_delete').click(function(){
+            var _that = this;
+            console.log(_that);
+            
+            var flag = confirm("你确定要删除吗");
+            if(flag){
+                var img_url = $(this).attr('img_url');
+                $.get('/admin/goods/deleteImg?_id={{goods._id}}&img_url='+img_url,function(response){
+                    console.log(response);
+                    
+                     if(response.flag){
+                    $(_that).parent().remove()
+                    console.log(response.msg);
+                }else{
+                    console.log(response.msg);
+                }
+                })
+               
+            }
+        })
+  
 </script>
