@@ -36,5 +36,16 @@ class GoodsAttrService extends Service {
       return { flag: false, msg: "查询所有商品属性成功失败" };
     }
   }
+  async deleteByGoodsId(goods_id){
+    try {
+      console.log('goodsattr');
+      
+        await this.ctx.model.GoodsAttr.deleteMany({goods_id:goods_id})
+        return {flag:true,msg:'删除更新所有商品属性成功'}
+    } catch (error) {
+      return {flag:false,msg:'删除更新所有商品属性失败'}
+    }
+  }
+
 }
 module.exports = GoodsAttrService;

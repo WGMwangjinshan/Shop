@@ -106,11 +106,18 @@ module.exports = app => {
   router.get("/admin/goods/add",controller.admin.goods.add)
   router.post("/admin/goods/doAdd", controller.admin.goods.doAdd);
   router.get("/admin/goods/getTypeAttrs",controller.admin.goods.change)
-
   router.get("/admin/goods/edit",controller.admin.goods.edit)
   router.post("/admin/goods/doEdit", controller.admin.goods.doEdit);
   router.get("/admin/goods/deleteImg",controller.admin.goods.deleteImg)
- 
+  router.get('/admin/goods/deleteUpdate',controller.admin.goods.deleteUpdate)
+  router.get('/admin/goods/delete',controller.admin.goods.delete)
+
+  //评论管理
+
+  router.get("/admin/comment", controller.admin.comment.list);
+  router.get("/admin/comment/add",controller.admin.comment.add)
+  router.post("/admin/comment/doAdd", controller.admin.comment.doAdd);
+  router.get('/admin/comment/delete',controller.admin.comment.delete)
   
 
 

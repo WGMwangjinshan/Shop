@@ -149,18 +149,41 @@ class GoodsController extends BaseController {
       ctx.body = { flag: false, msg: result.msg };
     }
   }
-  async doEdit(){
-    const {ctx} = this
-    var fromStream = await ctx.getFileStream({requireFile:false})
-    var lastPage = fromStream.fields.lastPage
-    var result =await ctx.service.goods.update(fromStream)
-    console.log('vvvvvvv'+JSON.stringify(result));
-    
-    if(result.flag){
-      await this.success(lastPage,result.msg)
-    }else{
-      await this.fail(ctx.locals.lastPage,result.msg)
+  async doEdit() {
+    const { ctx } = this;
+    var fromStream = await ctx.getFileStream({ requireFile: false });
+    var lastPage = fromStream.fields.lastPage;
+    var result = await ctx.service.goods.update(fromStream);
+    //console.log('vvvvvvv'+JSON.stringify(result));
+    if (result.flag) {
+      await this.success(lastPage, result.msg);
+    } else {
+      await this.fail(ctx.locals.lastPage, result.msg);
     }
+  }
+  async deleteUpdate() {
+    const { ctx } = this;
+    var _id = ctx.request.query._id;
+    var result = await ctx.service.goods.deleteUpdate(_id);
+    if (result.flag) {
+      await this.success(this.ctx.locals.lastPage, result.msg);
+    } else {
+      await this.fail(this.ctx.locals.lastPage, result.msg);
+    }
+  }
+  async delete() {
+
+    //删除文件goods_img，relate_gallerys，goods_desc
+    //删除关联表
+    //删除goods
+    const { ctx } = this;
+    var _id = ctx.request.query._id
+    var result = await ctx.service.goods.delete(_id)
+    // if(result.flag){
+    //   await this.success(ctx.locals.lastPage,result.msg)
+    // }else{
+    //   await this.fail(ctx.locals.lastPage,result.msg)
+    // }
   }
 }
 module.exports = GoodsController;

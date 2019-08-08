@@ -66,7 +66,7 @@
                                 </li>
                                 <li> <span>商品图片:</span> 
                                     <input type="file" name="goods_img" />
-                                    <input type="hidden" name="history_img" value="goods.goods_img" />
+                                    <input type="hidden" name="history_img" value="{{goods.goods_img}}" />
                                 <img src="{{helper.url200(goods.goods_img)}}" width="200">
                                 </li>
                                 <li> <span>商品简介:</span> <input type="text" name="goods_brief" value="{{goods.goods_brief}}"/></li>

@@ -33,8 +33,8 @@ class GoodsService extends Service {
         var dbPath = filePath.dbPath;
         var targetPath = filePath.targetPath;
         body.goods_img = dbPath;
-        await this.ctx.service.tool.uploadFile(fromStream, targetPath);//上传来源流
-        await this.ctx.service.tool.jimp(filePath.targetPath); 
+        await this.ctx.service.tool.uploadFile(fromStream, targetPath); //上传来源流
+        await this.ctx.service.tool.jimp(filePath.targetPath);
       }
       //字符串处理
       body.relate_goods = body.relate_goods.trim().split(",");
@@ -43,20 +43,28 @@ class GoodsService extends Service {
       body.relate_articles = body.relate_articles.trim().split(",");
       var goodsModel = new this.ctx.model.Goods(body);
       var result = await goodsModel.save();
+
       //处理商品属性值
       var goods_id = result._id;
       var attr_values = body.attr_value_list;
+      var attr_ids = body.attr_id_list;
+      if (typeof body.attr_value_list == "string") {
+        var attr_values = new Array(body.attr_value_list);
+        var attr_ids = new Array(body.attr_id_list);
+      }
+
       var attrNewValues = [];
       attr_values.forEach(element => {
         element = element.trim().split("\r\n");
         attrNewValues.push(element);
       });
-      var attrArray = body.attr_id_list;
+      var attrArray = attr_ids;
       for (let i = 0; i < attrArray.length; i++) {
         //拆分字段
         var attr_id = attrArray[i];
         var attr_value = attrNewValues[i];
         var typeAttr = await this.ctx.model.GoodsTypeAttr.findById(attr_id);
+        //
         var attr_name = typeAttr.attr_name;
         var type_id = typeAttr.type_id;
         var attr_group = typeAttr.attr_group;
@@ -72,16 +80,6 @@ class GoodsService extends Service {
           attr_group: attr_group,
           attr_type: attr_type
         });
-        // var goodsAttrModel = new this.ctx.model.GoodsAttr({
-        //   goods_id: goods_id,
-        //   type_id: type_id,
-        //   attr_id: attr_id,
-        //   attr_name: attr_name,
-        //   attr_value: attr_value,
-        //   attr_group: attr_group,
-        //   attr_type: attr_type
-        // });
-        // await goodsAttrModel.save();
       }
       //数据库存储完毕后才能取出id
       return { flag: true, msg: "商品保存成功" };
@@ -96,6 +94,9 @@ class GoodsService extends Service {
       var totleNum = await ctx.model.Goods.count({ data_status: 1 });
       var totalPage = Math.ceil(totleNum / pageSize);
       //？？
+      if (page > totalPage) {
+        page = totalPage;
+      }
       var goodss = await ctx.model.Goods.find({ data_status: 1 })
         .skip((page - 1) * pageSize)
         .limit(pageSize);
@@ -136,6 +137,7 @@ class GoodsService extends Service {
           }
         }
       );
+      //物理删除，允许物理图片冗余，不允许数据库冗余
       var path1 = "app" + img_url;
       var path2 = this.ctx.helper.url200(path1);
       if (fs.existsSync(path1)) {
@@ -158,46 +160,117 @@ class GoodsService extends Service {
     try {
       const { ctx } = this;
       var body = fromStream.fields;
-      console.log('xxxxxxxx'+JSON.stringify(body));
-      
       var _id = body._id;
+      //表单出现的问题？？？
+
+      // console.log("xxxxx" + JSON.stringify(body));
+      //console.log("vvvvvv" + body.relate_goods);
+
       if (fromStream && fromStream.filename) {
-        console.log('1234');
-        
         var filePath = await this.ctx.service.tool.filePath(
           fromStream.filename
         ); //找到tergetPath目标路径与dbPath相对路径
         var dbPath = filePath.dbPath;
         var targetPath = filePath.targetPath;
         await this.ctx.service.tool.uploadFile(fromStream, targetPath); //上传来源流
-  //删除
+        await this.ctx.service.tool.jimp(filePath.targetPath);
+        //删除
+        body.goods_img = dbPath;
+        await ctx.model.Goods.updateOne({ _id: _id }, body);
+        // console.log("xxxxx" + JSON.stringify(body));
         var path1 = "app" + body.history_img;
         var path2 = this.ctx.helper.url200(path1);
         if (fs.existsSync(path1)) {
-          console.log('asdfgh');
-          
           fs.unlinkSync(path1);
         }
         if (fs.existsSync(path2)) {
           fs.unlinkSync(path2);
         }
-        body.goods_img = dbPath;
+      } else {
+        //无文件修改
+        await ctx.model.Goods.updateOne({ _id: _id }, body);
       }
       //字符串处理
       body.relate_goods = body.relate_goods.trim().split(",");
       body.relate_gifts = body.relate_gifts.trim().split(",");
       body.relate_parts = body.relate_parts.trim().split(",");
       body.relate_articles = body.relate_articles.trim().split(",");
-     // console.log('xxxxxxxxxxxxxx'+_id);
-      
-     // console.log('================='+JSON.stringify(body));
-      
-      await ctx.model.Goods.updateOne({_id:_id},body)
-      console.log('123456789');
+      //处理商品属性值转化为数组
+
+      var attr_values = body.attr_value_list;
+      var attr_ids = body.attr_id_list;
+      if (typeof body.attr_value_list == "string") {
+        var attr_values = new Array(body.attr_value_list);
+        var attr_ids = new Array(body.attr_id_list);
+      }
+      var attrNewValues = [];
+      //循环将每一项拼接 。例：[a,8,[a,b],[a,b],[a,c]]
+      attr_values.forEach(element => {
+        element = element.trim().split("\r\n");
+        attrNewValues.push(element);
+      });
+      var attrArray = attr_ids;
+      //删除所有商品属性
+      var result = await ctx.service.goodsattr.deleteByGoodsId(_id);
+      if (result.flag) {
+        for (let i = 0; i < attrArray.length; i++) {
+          //拆分字段
+          var attr_id = attrArray[i];
+          var attr_value = attrNewValues[i];
+          //通过goodsattr的attr_id，拿到goodstypeattr表的所有数据，attr_id(外键) = _id（主键）,
+          var typeAttr = await this.ctx.model.GoodsTypeAttr.findById(attr_id);
+          var goods_id = _id;
+          var attr_name = typeAttr.attr_name;
+          var type_id = typeAttr.type_id;
+          var attr_group = typeAttr.attr_group;
+          var attr_type = typeAttr.attr_type;
+          //拼接存储,增加所有商品属性，相当于更新
+          await this.ctx.service.goodsattr.insert({
+            goods_id: goods_id,
+            type_id: type_id,
+            attr_id: attr_id,
+            attr_name: attr_name,
+            attr_value: attr_value,
+            attr_group: attr_group,
+            attr_type: attr_type
+          });
+        }
+      } else {
+        return { flag: false, msg: result.msg };
+      }
       return { flag: true, msg: "商品保存123456789成功" };
     } catch (error) {
       return { flag: false, msg: "商品保存失败" };
     }
+  }
+  async deleteUpdate(_id) {
+    try {
+      await this.ctx.model.Goods.updateOne({ _id: _id }, { data_status: 0 });
+      return { flag: true, msg: "软删除商品数据成功（data_status：0）" };
+    } catch (error) {
+      return { flag: false, msg: "软删除商品数据失败" };
+    }
+  }
+  async findAll(_id){
+    try {
+          var goodss = await this.ctx.model.Goods.find({_id:_id})
+          return {flag:true,data:goodss,msg:'按照id查询商品成功'}
+    } catch (error) {
+      return {flag:false,msg:'按照id查询商品失败'}
+    }
+
+
+  }
+  async delete(_id){
+    try {
+      var deleteGoods = await this.ctx.service.goods.findAll(_id)
+      console.log(deleteGoods);
+      
+    } catch (error) {
+      
+    }
+    
+
   }
 }
 
