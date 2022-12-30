@@ -21,6 +21,6 @@
     "svg-captcha": "^1.4.0"
   },
   "devDependencies": {
-    "egg-bin": "^4.13.0"
+    "egg-bin": "^5.9.0"
   }
 }
